@@ -1,11 +1,23 @@
+from flask import Flask, request, jsonify
+from flask_cors import CORS  # <-- add this
+
+app = Flask CORS(app)
+CORS(app)  # <-- add this line
 
 from flask import Flask, request, jsonify
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.chains import LLMChain
 from langchain.prompts import ChatPromptTemplate
 import os
+from flask import Flask, request, jsonify
+from flask_cors import CORS  # ✅ added for CORS support
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain.chains import LLMChain
+from langchain.prompts import ChatPromptTemplate
+import os
 
 app = Flask(__name__)
+CORS(app)  # ✅ allow all origins (you can restrict this later to your domain)
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "your-api-key-here")
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=GEMINI_API_KEY)
@@ -35,3 +47,4 @@ def chat():
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
+
