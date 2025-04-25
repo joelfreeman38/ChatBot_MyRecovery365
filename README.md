@@ -1,77 +1,89 @@
 
-# MR-365 Sober Coach API
+# MR-365 AI Sober Coach 🤖💬
 
-This is a Flask-based API for the MR-365 AI Sober Coach chatbot, powered by Google's Gemini via LangChain.
+![MR-365 AI Chatbot](./mr365-chatbot.png)
 
-## 🚀 Features
-
-- AI responses trained on addiction recovery prompts
-- Gemini 1.5 Flash integration
-- REST API endpoint at `/chat`
-- Ready to deploy on Render
-
-## 🛠 Tech Stack
-
-- Flask
-- LangChain
-- Gemini API
-- Transformers
-- Gunicorn (for production)
+**MR-365** is an AI-powered sober coaching chatbot designed to support individuals recovering from addiction.  
+Built with empathy, privacy, and real-time interaction in mind.
 
 ---
 
-## 🔧 Local Setup
+## 📚 Table of Contents
+- [Features](#features)
+- [Live Demo](#live-demo)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Technologies Used](#technologies-used)
+- [Project Status](#project-status)
+- [Contact](#contact)
+
+---
+
+## ✨ Features
+- Real-time AI chat powered by Gemini
+- Supportive, non-judgmental tone for addiction recovery
+- Floating chatbot bubble on WordPress site
+- Full-page chat assistant view
+- Avatars and styled message bubbles
+- Mobile responsive design
+- Secure CORS integration
+- Easy deployment via Render and GitHub
+
+---
+
+## 🌍 Live Demo
+- Full Chatbot Page: [MR-365 Chat UI](https://chatbot-myrecovery365.onrender.com/chat-ui)
+- Website Integration: [MyRecovery365.com](https://myrecovery365.com)
+
+---
+
+## 🛠 Installation (Local Development)
 
 ```bash
-git clone https://github.com/yourusername/mr365-flask-api.git
-cd mr365-flask-api
+# Clone the repository
+git clone https://github.com/your-username/your-repo-name.git
+cd your-repo-name
+
+# Create a virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
 pip install -r requirements.txt
-export GEMINI_API_KEY=your-api-key-here
+
+# Run the app
 python app.py
 ```
 
 ---
 
-## 🌐 Deploying to Render
+## 🚀 Usage
 
-1. Create a free account at [Render](https://render.com)
-2. Click **"New Web Service"**
-3. Connect your GitHub repo
-4. Use these settings:
-
-- **Environment:** Python 3
-- **Build Command:** `pip install -r requirements.txt`
-- **Start Command:** `gunicorn app:app`
-
-5. Add environment variable:
-```
-GEMINI_API_KEY = your-api-key-here
-```
-
-6. Deploy and get your public endpoint URL!
+- The backend `/chat` route handles POST requests and returns AI-generated responses.
+- The `/chat-ui` route serves a styled frontend with avatars and message bubbles.
+- Embedded into WordPress via iframe on Home page and Member Dashboard.
 
 ---
 
-## 🧠 Endpoint
-
-**POST** `/chat`
-
-**Request:**
-```json
-{
-  "message": "How do I stay sober today?"
-}
-```
-
-**Response:**
-```json
-{
-  "response": "Take it one step at a time. Remember why you started your journey."
-}
-```
+## 🔧 Technologies Used
+- Python (Flask)
+- LangChain
+- Google Gemini API
+- Render (Deployment)
+- WordPress + Elementor (Frontend)
+- HTML5 + CSS3 + Vanilla JavaScript
 
 ---
 
-## 📄 License
+## 🚧 Project Status
+✅ Live Deployment  
+🔄 Planned Enhancements:
+- Typing indicator
+- Chat session saving
+- Dark mode support
 
-MIT – for private use and client delivery only.
+---
+
+## 👨‍💻 Contact
+Joel Freeman  
+[Your Website/LinkedIn if you want to add]
