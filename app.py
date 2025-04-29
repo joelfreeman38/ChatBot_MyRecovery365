@@ -8,21 +8,26 @@ import os
 app = Flask(__name__)
 CORS(app, origins=["https://myrecovery365.com"])
 
-# Set up Gemini / Google API for MR-365 chatbot
+# Gemini API setup
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "your-api-key-here")
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=GEMINI_API_KEY)
 
-# Prompt template for MR-365
-prompt = ChatPromptTemplate.from_template("""
-You are MR-365, a compassionate AI sober coach that supports individuals recovering from addiction.
-Respond in a supportive and non-judgmental tone.
+# Clinical-style prompt for MR-365
+prompt = ChatPromptTemplate.from_template("""You are MR-365, a compassionate but structured AI sober coach that helps individuals in addiction recovery.
+
+Your tone is supportive, non-judgmental, and professional — like a recovery coach, therapist, or clinical case manager.
+
+Always respond with:
+- Brief affirmation (1 sentence)
+- A bullet-point list of suggested steps or reflections
+- End with an encouraging statement that shows ongoing support
+
+Keep messages concise, helpful, and easy to act on.
 User: {input}
-MR-365:
-""")
+MR-365:""")
 
 chain = LLMChain(llm=llm, prompt=prompt)
 
-# POST route to handle chat messages
 @app.route("/chat", methods=["POST"])
 def chat():
     data = request.get_json()
@@ -37,7 +42,6 @@ def chat():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# UI chat interface for iframe or full-page display
 @app.route("/chat-ui", methods=["GET"])
 def chat_ui():
     return render_template_string("""
@@ -55,12 +59,10 @@ def chat_ui():
                 align-items: center;
                 padding: 20px;
             }
-
             h2 {
                 margin-bottom: 10px;
                 color: #333;
             }
-
             #chat-box {
                 width: 100%;
                 max-width: 700px;
@@ -73,20 +75,16 @@ def chat_ui():
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
                 margin-bottom: 10px;
             }
-
             .message {
                 display: flex;
                 margin-bottom: 15px;
             }
-
             .user {
                 justify-content: flex-end;
             }
-
             .bot {
                 justify-content: flex-start;
             }
-
             .bubble {
                 max-width: 70%;
                 padding: 12px 16px;
@@ -94,19 +92,16 @@ def chat_ui():
                 font-size: 1.05rem;
                 line-height: 1.4;
             }
-
             .user .bubble {
                 background-color: #007bff;
                 color: white;
                 border-bottom-right-radius: 5px;
             }
-
             .bot .bubble {
                 background-color: #e4e6eb;
                 color: #111;
                 border-bottom-left-radius: 5px;
             }
-
             .avatar {
                 width: 36px;
                 height: 36px;
@@ -115,15 +110,12 @@ def chat_ui():
                 background-size: cover;
                 background-position: center;
             }
-
             .user .avatar {
                 background-image: url('https://cdn-icons-png.flaticon.com/512/1946/1946429.png');
             }
-
             .bot .avatar {
                 background-image: url('https://cdn-icons-png.flaticon.com/512/4712/4712106.png');
             }
-
             #user-input {
                 width: 100%;
                 max-width: 700px;
@@ -133,7 +125,6 @@ def chat_ui():
                 border: 1px solid #ccc;
                 box-sizing: border-box;
             }
-
             @media screen and (max-width: 600px) {
                 #chat-box {
                     height: 400px;
@@ -148,36 +139,28 @@ def chat_ui():
         <h2>Talk to MR-365</h2>
         <div id="chat-box"></div>
         <input type="text" id="user-input" placeholder="Type your message..." onkeypress="handleKey(event)">
-
         <script>
             const chatBox = document.getElementById('chat-box');
             const input = document.getElementById('user-input');
-
             function appendMessage(message, sender) {
                 const messageDiv = document.createElement('div');
                 messageDiv.classList.add('message', sender);
-
                 const avatar = document.createElement('div');
                 avatar.classList.add('avatar');
-
                 const bubble = document.createElement('div');
                 bubble.classList.add('bubble');
                 bubble.textContent = message;
-
                 messageDiv.appendChild(sender === "user" ? bubble : avatar);
                 messageDiv.appendChild(sender === "user" ? avatar : bubble);
-
                 chatBox.appendChild(messageDiv);
                 chatBox.scrollTop = chatBox.scrollHeight;
             }
-
             function handleKey(event) {
                 if (event.key === 'Enter') {
                     const message = input.value.trim();
                     if (!message) return;
                     appendMessage(message, "user");
                     input.value = "";
-
                     fetch('/chat', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -198,7 +181,6 @@ def chat_ui():
     </html>
     """)
 
-# Health check
 @app.route("/", methods=["GET"])
 def index():
     return "<h3>MR-365 Chatbot is running.</h3>"
