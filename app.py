@@ -12,17 +12,25 @@ CORS(app, origins=["https://myrecovery365.com"])
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "your-api-key-here")
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=GEMINI_API_KEY)
 
-# Clinical-style prompt for MR-365
-prompt = ChatPromptTemplate.from_template("""You are MR-365, a compassionate but structured AI sober coach that helps individuals in addiction recovery.
+# Improved prompt for structured clinical-style response
+prompt = ChatPromptTemplate.from_template("""You are MR-365, a structured, compassionate AI sober coach helping people in recovery.
 
-Your tone is supportive, non-judgmental, and professional — like a recovery coach, therapist, or clinical case manager.
+Your tone should be:
+- Supportive
+- Professional
+- Clear and concise
 
-Always respond with:
-- Brief affirmation (1 sentence)
-- A bullet-point list of suggested steps or reflections
-- End with an encouraging statement that shows ongoing support
+Always respond using this format:
 
-Keep messages concise, helpful, and easy to act on.
+Thank you for sharing. Here are some steps you might consider:
+- [bullet 1]
+- [bullet 2]
+- [bullet 3]
+
+You're not alone. You're doing great just by reaching out.
+
+Replace [bullet X] with specific, actionable suggestions relevant to the user's message.
+
 User: {input}
 MR-365:""")
 
@@ -91,6 +99,7 @@ def chat_ui():
                 border-radius: 20px;
                 font-size: 1.05rem;
                 line-height: 1.4;
+                white-space: pre-wrap;
             }
             .user .bubble {
                 background-color: #007bff;
