@@ -8,31 +8,34 @@ import os
 app = Flask(__name__)
 CORS(app, origins=["https://myrecovery365.com"])
 
-# Gemini API setup
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "your-api-key-here")
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=GEMINI_API_KEY)
 
-# Improved prompt for structured clinical-style response
 prompt = ChatPromptTemplate.from_template("""You are MR-365, a structured, compassionate AI sober coach helping people in recovery.
 
 Your tone should be:
 - Supportive
 - Professional
 - Clear and concise
+- Encouraging open conversation
 
 Always respond using this format:
 
-Thank you for sharing. Here are some steps you might consider:
-- [bullet 1]
-- [bullet 2]
-- [bullet 3]
+1. Start with a brief affirmation or acknowledgment.
+2. Provide a bulleted list of specific, actionable suggestions.
+3. End with a dynamic, open-ended follow-up question that fits the user's emotional tone or situation.
 
-You're not alone. You're doing great just by reaching out.
+Examples of dynamic closings:
+- If the user sounds anxious: "Would you like to talk more about what's making you feel this way?"
+- If the user sounds reflective: "Is there something specific you'd like to unpack together?"
+- If the user seems motivated: "What's one small step you'd like to take today?"
+- If unsure: "I'm here to talk about anything that's on your mind."
 
-Replace [bullet X] with specific, actionable suggestions relevant to the user's message.
+Adapt the closing question to match the user’s message and mood.
 
 User: {input}
-MR-365:""")
+MR-365:
+""")
 
 chain = LLMChain(llm=llm, prompt=prompt)
 
@@ -50,149 +53,6 @@ def chat():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route("/chat-ui", methods=["GET"])
-def chat_ui():
-    return render_template_string("""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>MR-365 Sober Coach</title>
-        <style>
-            body {
-                font-family: 'Segoe UI', sans-serif;
-                margin: 0;
-                background-color: #f2f2f2;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                padding: 20px;
-            }
-            h2 {
-                margin-bottom: 10px;
-                color: #333;
-            }
-            #chat-box {
-                width: 100%;
-                max-width: 700px;
-                height: 450px;
-                background: white;
-                border-radius: 12px;
-                border: 1px solid #ddd;
-                overflow-y: auto;
-                padding: 20px;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-                margin-bottom: 10px;
-            }
-            .message {
-                display: flex;
-                margin-bottom: 15px;
-            }
-            .user {
-                justify-content: flex-end;
-            }
-            .bot {
-                justify-content: flex-start;
-            }
-            .bubble {
-                max-width: 70%;
-                padding: 12px 16px;
-                border-radius: 20px;
-                font-size: 1.05rem;
-                line-height: 1.4;
-                white-space: pre-wrap;
-            }
-            .user .bubble {
-                background-color: #007bff;
-                color: white;
-                border-bottom-right-radius: 5px;
-            }
-            .bot .bubble {
-                background-color: #e4e6eb;
-                color: #111;
-                border-bottom-left-radius: 5px;
-            }
-            .avatar {
-                width: 36px;
-                height: 36px;
-                border-radius: 50%;
-                margin: 0 10px;
-                background-size: cover;
-                background-position: center;
-            }
-            .user .avatar {
-                background-image: url('https://cdn-icons-png.flaticon.com/512/1946/1946429.png');
-            }
-            .bot .avatar {
-                background-image: url('https://cdn-icons-png.flaticon.com/512/4712/4712106.png');
-            }
-            #user-input {
-                width: 100%;
-                max-width: 700px;
-                padding: 15px;
-                font-size: 1.1rem;
-                border-radius: 8px;
-                border: 1px solid #ccc;
-                box-sizing: border-box;
-            }
-            @media screen and (max-width: 600px) {
-                #chat-box {
-                    height: 400px;
-                }
-                .bubble {
-                    font-size: 1rem;
-                }
-            }
-        </style>
-    </head>
-    <body>
-        <h2>Talk to MR-365</h2>
-        <div id="chat-box"></div>
-        <input type="text" id="user-input" placeholder="Type your message..." onkeypress="handleKey(event)">
-        <script>
-            const chatBox = document.getElementById('chat-box');
-            const input = document.getElementById('user-input');
-            function appendMessage(message, sender) {
-                const messageDiv = document.createElement('div');
-                messageDiv.classList.add('message', sender);
-                const avatar = document.createElement('div');
-                avatar.classList.add('avatar');
-                const bubble = document.createElement('div');
-                bubble.classList.add('bubble');
-                bubble.textContent = message;
-                messageDiv.appendChild(sender === "user" ? bubble : avatar);
-                messageDiv.appendChild(sender === "user" ? avatar : bubble);
-                chatBox.appendChild(messageDiv);
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }
-            function handleKey(event) {
-                if (event.key === 'Enter') {
-                    const message = input.value.trim();
-                    if (!message) return;
-                    appendMessage(message, "user");
-                    input.value = "";
-                    fetch('/chat', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ message })
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.response) {
-                            appendMessage(data.response, "bot");
-                        } else {
-                            appendMessage("Error: " + data.error, "bot");
-                        }
-                    });
-                }
-            }
-        </script>
-    </body>
-    </html>
-    """)
-
 @app.route("/", methods=["GET"])
 def index():
     return "<h3>MR-365 Chatbot is running.</h3>"
-
-if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
