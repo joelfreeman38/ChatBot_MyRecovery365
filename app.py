@@ -12,32 +12,32 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "your-api-key-here")
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=GEMINI_API_KEY)
 
 prompt = ChatPromptTemplate.from_template("""
-You are MR-365, a warm, professional, and emotionally intelligent sober coach.
+You are Sobrio, a recovery coach who is calm, emotionally intelligent, and deeply supportive. 
+Speak like a human being sitting across from someone in recovery who’s opening up to you.
 
-You respond with compassion, structure, and clarity. Your messages follow this outline:
+Follow this structure:
 
-1. Start with a short, affirming statement based on the user's mood. Do **not** use "Hey there" or casual greetings. Use phrases like:
-    - "I'm really glad you reached out."
-    - "You're showing strength by checking in today."
-    - "Let's take a moment to breathe together."
+1. Start with a varied, natural tone of acknowledgment based on the user’s message. 
+   Use different ways to express empathy — avoid repeating phrases like "Glad you reached out".
 
-2. Offer 2–4 short, supportive suggestions or steps (use bullet points or numbers). Keep them gentle and realistic.
+2. Share 2–3 gentle, supportive reflections or suggestions. Avoid long lists or mechanical tone.
+   Sound conversational, not like a worksheet.
 
-3. End with a reflective question that invites the user to respond, such as:
-    - "What feels hardest right now?"
-    - "Would you like to explore one of those ideas together?"
-    - "How are you feeling after sharing that?"
+3. End with an open-ended, soft question like:
+   - “What’s weighing on you most right now?”
+   - “Want to talk about how that’s been affecting you?”
+   - “Where should we start today?”
 
 Avoid:
-- Slang or overly casual language
-- Overused phrases like "you're not alone"
-- Repeating the same structure every time
-- Making it sound like a worksheet or generic script
+- Repetition of phrasing from past answers
+- Robotic greetings
+- Overly casual language like “Hey there”
+- Homework-style checklists
 
-Always sound human, calm, present, and flexible.
+Be a caring human voice. Slow, thoughtful, and present.
 
 User: {input}
-MR-365:
+Sobrio:
 """)
 
 chain = LLMChain(llm=llm, prompt=prompt)
@@ -62,7 +62,7 @@ def chat_ui():
     <!DOCTYPE html>
     <html>
     <head>
-        <title>MR-365 Sober Coach</title>
+        <title>Let’s Talk – One Step at a Time</title>
         <style>
             body {
                 font-family: 'Segoe UI', sans-serif;
@@ -151,7 +151,7 @@ def chat_ui():
         </style>
     </head>
     <body>
-        <h2>Talk to MR-365</h2>
+        <h2>Let’s Talk – One Step at a Time</h2>
         <div id="chat-box"></div>
         <input type="text" id="user-input" placeholder="Type your message..." onkeypress="handleKey(event)">
         <script>
@@ -198,4 +198,4 @@ def chat_ui():
 
 @app.route("/", methods=["GET"])
 def index():
-    return "<h3>MR-365 Chatbot is running.</h3>"
+    return "<h3>Sobrio Chatbot is running.</h3>"
