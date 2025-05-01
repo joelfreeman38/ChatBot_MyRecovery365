@@ -1,111 +1,136 @@
+# 🤖 Sobrio: AI Recovery Coach
 
-# MR-365 AI Sober Coach 🤖💬
-
-![MR-365 AI Chatbot](./mr365-chatbot.png)
-
-[![GitHub](https://img.shields.io/badge/GitHub-Repo-blue?logo=github)](https://github.com/your-username/your-repo-name)
-![Version](https://img.shields.io/badge/version-1.0.0-brightgreen)
-
-**MR-365** is an AI-powered sober coaching chatbot designed to support individuals recovering from addiction.  
-Built with empathy, privacy, and real-time interaction in mind.  
-🔗 Live Site: [myrecovery365.com](https://myrecovery365.com)
+[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](#)  
+[![Build](https://img.shields.io/badge/deploy-render-green.svg)](https://myrecovery365.com/elementor-page-779/)  
+[![Powered By](https://img.shields.io/badge/powered%20by-Gemini%201.5-blueviolet)](#)
 
 ---
 
-## 📚 Table of Contents
+## 🧭 Table of Contents
+- [Project Overview](#project-overview)
+- [Live Demo](#live-demo)
 - [Features](#features)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Technology Stack](#technology-stack)
-- [Project Status](#project-status)
-- [Contact](#contact)
+- [Tech Stack](#tech-stack)
+- [Setup & Deployment](#setup--deployment)
+- [Sobrio’s Voice](#sobrios-voice)
+- [Roadmap](#roadmap-v2)
+- [Credits](#credits)
+- [License](#license)
+
+---
+
+## 🔍 Project Overview
+
+**Sobrio** is a purpose-driven, emotionally intelligent AI recovery companion.  
+Version 2.0 builds on the initial foundation to deliver a deeper, more intuitive user experience — moving Sobrio closer to feeling like a real 24/7 recovery coach.
+
+This version runs on a scalable Flask + Gemini backend, fully integrated into a WordPress/BuddyBoss membership environment, making it ready to evolve into a truly personalized mobile-friendly recovery app.
+
+### 🌟 Vision:
+Sobrio will evolve into a fully integrated wellness companion, embedded within:
+- Secure member dashboards
+- Personalized recovery journeys
+- Journal and tracker access
+- Real-time messaging and support escalation
+- App-like experience via mobile PWA
+
+Visit the current live integration:  
+🔗 [https://myrecovery365.com/elementor-page-779/](https://myrecovery365.com/elementor-page-779/)
+
+---
+
+## 🚀 Live Demo
+
+> [View Sobrio on MyRecovery365](https://myrecovery365.com/elementor-page-779/)  
+(Embedded securely via custom WordPress plugin)
 
 ---
 
 ## ✨ Features
-- Real-time conversation with Gemini-powered AI
-- Supportive and non-judgmental tone for addiction recovery
-- Styled message bubbles with avatars
-- Responsive design for mobile and desktop
-- Easy integration into websites via iframe
-- Secure backend with CORS protection
-- WordPress-compatible embed setup
+
+- 🧠 **Conversational Prompt Engine** – Human, non-scripted coaching style using Gemini 1.5
+- 🧑‍💻 **Custom Chat UI** – Avatar, typing indicator, responsive layout
+- 💬 **Empathy Engine** – Dynamic tone recognition and variation
+- 🌐 **WordPress Integration** – Plugin-embedded iframe, slug-based display
+- ☁️ **Always-On Hosting** – Deployed on Render Pro Plan, no cold starts
 
 ---
 
-## 🛠 Installation
+## 📦 Tech Stack
+
+| Layer       | Tech                      |
+|-------------|---------------------------|
+| AI Engine   | Google Gemini 1.5 via LangChain |
+| Backend     | Python + Flask            |
+| Hosting     | Render.com (Pro Tier)     |
+| CMS         | WordPress + BuddyBoss     |
+| UI Delivery | Custom iframe + Elementor |
+| Deployment  | GitHub > Render           |
+
+---
+
+## 🛠️ Setup & Deployment
+
+### 🔧 Requirements
+- Python 3.10+
+- `langchain-google-genai`, `flask`
+- `.env` with `GEMINI_API_KEY`
+
+### ⚙️ Local Setup
 
 ```bash
-# Clone the repository
-git clone https://github.com/your-username/your-repo-name.git
-cd your-repo-name
-
-# Create and activate virtual environment
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# Install dependencies
 pip install -r requirements.txt
-
-# Run the app
 python app.py
 ```
 
----
+### ☁️ Render Hosting
+- Connect to GitHub, select `app.py`
+- Add environment variable for `GEMINI_API_KEY`
+- Deploy with 512MB+ memory plan
 
-## 🚀 Usage
-
-- Backend `/chat` route handles incoming POST messages.
-- Frontend `/chat-ui` provides a styled web-based chat interface.
-- Embed the chat UI into your site using an iframe:
-  
-```html
-<iframe src="https://your-production-host/chat-ui" width="100%" height="600px" style="border: none;"></iframe>
-```
+### 🌐 WordPress Integration
+1. Upload `sobrio-chatbot-plugin.zip` via WordPress Plugins
+2. Activate and link to `elementor-page-779`
+3. Plugin injects custom chatbot section based on slug match
 
 ---
 
-## 🧰 Technology Stack
+## 🗣️ Sobrio’s Voice
 
-### 🖥️ Frontend
-- **HTML5 + CSS3**: UI structure and styling
-- **Vanilla JavaScript**: Handles message input, API requests, and dynamic message rendering
-- **Responsive Design**: Mobile-friendly layout using flexbox
-- **Avatars and bubble UI**: Chat interface with custom avatars and styled message bubbles
-- **Embedded via iframe**: Seamless integration into WordPress or any static site
+> “Let’s Talk – One Step at a Time.”
 
-### ⚙️ Backend
-- **Python 3.x**
-- **Flask**: Lightweight REST API framework to serve endpoints
-- **Flask-CORS**: Secure cross-origin requests between WordPress frontend and Flask backend
+Sobrio speaks with calm clarity, emotional presence, and structured support.  
+Unlike typical bots, Sobrio doesn’t repeat lines or over-promise solutions. Instead, it:
+- Validates user emotions
+- Offers realistic suggestions
+- Asks thoughtful follow-up questions
 
-### 🧠 AI & Language Model
-- **Google Gemini 1.5 Flash**: Advanced conversational AI via LangChain integration
-- **LangChain**: Orchestrates prompt templates and model interaction
-- **Custom prompt tuning**: Defines MR-365’s supportive tone and behavior
-
-### ☁️ Deployment & DevOps
-- **GitHub**: Source control and version management
-- **Render**: Cloud deployment of the Flask API and chatbot interface
-- **Environment Variables**: Secures Gemini API keys in deployment
-
-### 🌐 CMS / Integration
-- **WordPress + Elementor**: Powers the main site (myrecovery365.com)
-- **WP HTML Embed**: Chatbot widget integrated via Elementor HTML block
-- **WP Fusion + ActiveCampaign**: User automation and email workflow (mentioned in project context)
+Designed to simulate real-life coaching presence for people in recovery.
 
 ---
 
-## 🚧 Project Status
-**Current Version:** Stable and deployed  
-**In Progress:**
-- Typing animation
-- Auto-scroll and UX polish
-- Voice input (planned)
+## 🔭 Roadmap (V2+)
+
+| Feature | Status |
+|---------|--------|
+| 🧠 Session Memory | 🟡 Planning |
+| 🎭 Mood-Aware Responses | 🟡 Planning |
+| 📓 Recovery Journal Mode | 🔜 |
+| 🔐 Member Paywall Logic (BuddyBoss) | 🔜 |
+| 📈 Analytics & Usage Logs | 🔜 |
+| 📱 Mobile App Wrapper (PWA) | 🔜 |
+| 🧠 Crisis Keyword Detection | 🔜 |
+| 🧑‍🤝‍🧑 Human-Sponsor Chat Tier | 🧠 Brainstorming |
 
 ---
 
-## 👤 Contact
+## 🙌 Credits
 
-**Joel Freeman**  
-🔗 [myrecovery365.com](https://myrecovery365.com)
+Created by **Joel Freeman**  
+With guidance from ChatGPT, Gemini, and the lived experience of recovery communities.
+
+---
+
+## 🪪 License
+
+Proprietary – All rights reserved. Not for public redistribution without explicit permission.
