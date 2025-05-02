@@ -1,11 +1,12 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from langchain_google_genai import ChatGoogleGenerativeAI
+import os
 import google.generativeai as genai
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
-import os
+
 
 app = Flask(__name__)
 CORS(app)
