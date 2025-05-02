@@ -1,7 +1,6 @@
-Flask==2.3.2
-langchain==0.1.13
-langchain-google-genai==0.0.8
-transformers==4.39.3
-torch
-gunicorn
+flask
 flask-cors
+langchain>=0.2.0
+langchain-community>=0.0.14
+google-generativeai
+python-dotenv
