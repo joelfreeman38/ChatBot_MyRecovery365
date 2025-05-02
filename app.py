@@ -1,78 +1,55 @@
 import os
+import google.generativeai as genai
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from langchain_google_genai import ChatGoogleGenerativeAI
-import google.generativeai as genai
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
+from dotenv import load_dotenv
 
+load_dotenv()
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 app = Flask(__name__)
 CORS(app)
 
-llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7, google_api_key=os.getenv("GOOGLE_API_KEY"))
+model = genai.GenerativeModel("gemini-1.5-flash")
 
-prompt_template = PromptTemplate(
-    input_variables=["input"],
-    template="""
-You are Sobrio, a compassionate and encouraging sobriety support coach trained in addiction recovery and emotional support. Use warm, conversational, and non-judgmental language to respond to people seeking help. End each response with an open-ended question to keep the conversation going.
+CRISIS_KEYWORDS = [
+    "suicidal", "kill myself", "end it all", "self-harm", "cutting", "can’t go on",
+    "jump off", "overdose", "hang myself", "no way out", "ending it", "want to die"
+]
 
-If a user expresses a relapse, depression, anxiety, or thoughts of self-harm, offer supportive resources and encourage them to seek real help. If someone is in crisis, prioritize empathy and point them to immediate support like 988 or international hotlines.
+CRISIS_RESPONSE = (
+    "It sounds like you're going through an incredibly difficult time. "
+    "You're not alone, and there is help available.
 
-User: {input}
-Sobrio:
-"""
+"
+    "**If you're in the U.S.**, please call or text **988** for the Suicide & Crisis Lifeline.
+"
+    "**In Canada**, call **1-833-456-4566**.
+"
+    "**In the U.K.**, contact **Samaritans at 116 123**.
+"
+    "**Find international resources:** https://findahelpline.com/
+
+"
+    "Would you like to talk more about what's on your mind right now?"
 )
 
-chain = LLMChain(llm=llm, prompt=prompt_template)
+def detect_crisis(text):
+    lowered = text.lower()
+    return any(keyword in lowered for keyword in CRISIS_KEYWORDS)
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    data = request.json
-    user_input = data.get("input", "")
-    user_input_lower = user_input.lower()
+    user_input = request.json.get("message", "")
 
-    relapse_triggers = ["i used", "i relapsed", "i drank", "i slipped", "i messed up"]
-    anxiety_triggers = ["overwhelmed", "too much", "can't handle", "panic", "spiraling"]
-    suicidal_triggers = [
-        "i want to die", "i can’t do this", "i can't do this", "i want to give up",
-        "i feel hopeless", "i don’t want to live", "i don't want to live",
-        "i want to end it", "i'm suicidal", "i feel like ending it"
-    ]
-
-    if any(phrase in user_input_lower for phrase in suicidal_triggers):
-        crisis_message = (
-            "I'm really sorry you're feeling this way. You're not alone — and there are people who care and want to help.\n\n"
-            "• Call or text 988 (U.S. Suicide & Crisis Lifeline)\n"
-            "• Call 1-833-456-4566 (Talk Suicide Canada)\n"
-            "• Call 116 123 (Samaritans UK)\n"
-            "• Call 13 11 14 (Lifeline Australia)\n"
-            "• Call +91 9152987821 (iCall India)\n\n"
-            "These services are confidential and available 24/7. Please consider talking to someone — you are not alone."
-        )
-        return jsonify({"response": crisis_message})
-
-    if any(phrase in user_input_lower for phrase in relapse_triggers):
-        relapse_message = (
-            "It’s okay to have setbacks — what matters is what you do next. "
-            "You're not starting over; you're continuing your journey. Would you like to reflect on what happened or talk through your next step?"
-        )
-        return jsonify({"response": relapse_message})
-
-    if any(phrase in user_input_lower for phrase in anxiety_triggers):
-        anxiety_message = (
-            "It sounds like you're feeling overwhelmed. Let's take a breath together. "
-            "You're not alone, and we can talk through what's weighing on you one step at a time."
-        )
-        return jsonify({"response": anxiety_message})
+    if detect_crisis(user_input):
+        return jsonify({"response": CRISIS_RESPONSE})
 
     try:
-        response = chain.run({"input": user_input})
-    except Exception:
-        response = "I'm having trouble generating a response right now, but I'm still here for you."
-
-    return jsonify({"response": response})
+        response = model.generate_content(user_input)
+        return jsonify({"response": response.text})
+    except Exception as e:
+        return jsonify({"response": "There was an error generating a response. Please try again later."}), 500
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=False, host="0.0.0.0", port=8000)
