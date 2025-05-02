@@ -51,6 +51,7 @@ def chat():
         return jsonify({"error": "No input message provided."}), 400
 
     try:
+        
     # Crisis Detection Block
     user_input_lower = user_input.lower()
     relapse_triggers = ["i used", "i relapsed", "i drank", "i slipped", "i messed up"]
@@ -82,7 +83,10 @@ These services are confidential and available 24/7. Please consider talking to s
         return jsonify({{"response": anxiety_message}})
 
 
-    response = chain.run({"input": user_input})
+    try:
+        response = chain.run({"input": user_input})
+    except Exception as e:
+        response = "I'm having trouble generating a response right now, but I'm still here for you."
         return jsonify({"response": response})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
