@@ -51,7 +51,6 @@ def chat():
         return jsonify({"error": "No input message provided."}), 400
 
     try:
-        
     # Crisis Detection Block
     user_input_lower = user_input.lower()
     relapse_triggers = ["i used", "i relapsed", "i drank", "i slipped", "i messed up"]
@@ -61,7 +60,7 @@ def chat():
         "i feel hopeless", "i don’t want to live", "i don't want to live",
         "i want to end it", "i'm suicidal", "i feel like ending it"
     ]
-        
+
     if any(phrase in user_input_lower for phrase in suicidal_triggers):
         crisis_message = """I'm really sorry you're feeling this way. You're not alone — and there are people who care and want to help.
 
