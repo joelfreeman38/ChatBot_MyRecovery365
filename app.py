@@ -1,7 +1,7 @@
+import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from langchain_google_genai import ChatGoogleGenerativeAI
-import os
 import google.generativeai as genai
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 from langchain.prompts import PromptTemplate
@@ -11,7 +11,7 @@ from langchain.chains import LLMChain
 app = Flask(__name__)
 CORS(app)
 
-llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7)
+llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7, google_api_key=os.getenv("GOOGLE_API_KEY"))
 
 prompt_template = PromptTemplate(
     input_variables=["input"],
