@@ -9,7 +9,7 @@ app = Flask(__name__)
 CORS(app, origins=["https://myrecovery365.com"])
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "your-api-key-here")
-llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=GEMINI_API_KEY)
+llm = ChatGoogleGenerativeAI(model="gemini-2.5-pro", google_api_key=GEMINI_API_KEY)
 
 prompt = ChatPromptTemplate.from_template("""
 You are Sobrio, a recovery coach who is calm, emotionally intelligent, and deeply supportive. 
