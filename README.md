@@ -2,7 +2,7 @@
 
 [![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](#)  
 [![Build](https://img.shields.io/badge/deploy-render-green.svg)](https://myrecovery365.com/elementor-page-779/)  
-[![Powered By](https://img.shields.io/badge/powered%20by-Gemini%201.5-blueviolet)](#)
+[![Powered By](https://img.shields.io/badge/powered%20by-Gemini%202.5-blueviolet)](#)
 
 ---
 
@@ -60,7 +60,7 @@ Visit the current live integration:
 
 | Layer       | Tech                      |
 |-------------|---------------------------|
-| AI Engine   | Google Gemini 1.5 via LangChain |
+| AI Engine   | Google Gemini 2.5 via LangChain |
 | Backend     | Python + Flask            |
 | Hosting     | Render.com (Pro Tier)     |
 | CMS         | WordPress + BuddyBoss     |
