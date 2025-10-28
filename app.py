@@ -1,21 +1,23 @@
+import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from google.generativeai import GenerativeModel
-import google.generativeai as genai
-import os
 from dotenv import load_dotenv
 
-# Load environment variables
+from langchain_core.messages import HumanMessage
+from langchain_google_genai import ChatGoogleGenerativeAI
+
+# Load environment variables from .env file
 load_dotenv()
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
-# Configure Gemini
-genai.configure(api_key=GOOGLE_API_KEY)
-model = GenerativeModel(model_name="models/gemini-1.5-pro-latest")
-
-# Flask setup
 app = Flask(__name__)
 CORS(app)
+
+# Gemini Pro 2.5 model
+model = ChatGoogleGenerativeAI(
+    model="gemini-1.5-pro-latest",
+    google_api_key=os.getenv("GOOGLE_API_KEY"),
+    convert_system_message_to_human=True
+)
 
 # Updated system prompt
 system_instruction = """
@@ -36,29 +38,27 @@ You: "You're not alone — many feel this way. Want to talk through what happene
 Begin responding below:
 """
 
-@app.route("/chat", methods=["POST"])
+@app.route('/')
+def index():
+    return "🧠 Sobrio is live and ready to chat!"
+
+@app.route('/chat', methods=['POST'])
 def chat():
     data = request.get_json()
-    user_input = data.get("message", "")
+    user_input = data.get('message')
 
     if not user_input:
-        return jsonify({"error": "Missing user message."}), 400
+        return jsonify({'error': 'No message provided'}), 400
 
     try:
-        response = model.generate_content([
-            {"role": "system", "parts": [system_instruction]},
-            {"role": "user", "parts": [user_input]}
+        response = model.invoke([
+            HumanMessage(content=system_instruction),
+            HumanMessage(content=user_input)
         ])
-
-        text_response = response.text.strip()
-        return jsonify({"response": text_response})
+        return jsonify({'response': response.content})
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({'error': str(e)}), 500
 
-@app.route("/")
-def index():
-    return "Sobrio Chatbot API running."
-
-if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+if __name__ == '__main__':
+    app.run(debug=False)
