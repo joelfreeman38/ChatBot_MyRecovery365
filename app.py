@@ -1,33 +1,25 @@
 import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_google_genai import ChatGoogleGenerativeAI
-from dotenv import load_dotenv
+from google.generativeai import configure, GenerativeModel
 
-# Load environment variables
-load_dotenv()
-
-# Initialize Flask app
 app = Flask(__name__)
 CORS(app)
 
-# Load Google API Key from environment
+# Load Google API key from environment variable
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-
 if not GOOGLE_API_KEY:
     raise ValueError("GOOGLE_API_KEY is not set in environment variables.")
 
-# Initialize Gemini Pro model
-model = ChatGoogleGenerativeAI(
-    model="gemini-1.5-pro",
-    google_api_key=GOOGLE_API_KEY,
-    convert_system_message_to_human=True
-)
+# Set up Google Generative AI
+configure(api_key=GOOGLE_API_KEY)
 
-# Prompt template for Sobrio
+# Use Gemini Pro 2.5 model
+model = GenerativeModel("gemini-1.5-pro-latest")
+
+# Improved prompt template
 system_instruction = """
-You are Sobrio, a compassionate but direct sober coach. 
+You are Sobrio, a compassionate but direct sober coach.
 Your primary goals are:
 1. Answer the user's question clearly and accurately.
 2. If the user is in emotional distress, offer empathy **after** answering the question.
@@ -46,7 +38,7 @@ Begin responding below:
 
 @app.route("/", methods=["GET"])
 def home():
-    return "Sobrio is live and ready to chat!"
+    return jsonify({"message": "Sobrio AI Coach is running."})
 
 @app.route("/chat", methods=["POST"])
 def chat():
@@ -55,23 +47,19 @@ def chat():
         user_input = data.get("message", "").strip()
 
         if not user_input:
-            return jsonify({"error": "No user input provided."}), 400
+            return jsonify({"error": "No input provided."}), 400
 
-        messages = [
-            SystemMessage(content=system_instruction),
-            HumanMessage(content=user_input)
-        ]
+        response = model.generate_content([
+            {"role": "system", "parts": [system_instruction]},
+            {"role": "user", "parts": [user_input]}
+        ])
 
-        response = model.invoke(messages)
-        return jsonify({"response": response.content})
+        output_text = response.text.strip() if hasattr(response, 'text') else "Sorry, I didn't understand that."
+
+        return jsonify({"response": output_text})
 
     except Exception as e:
-        print(f"[ERROR] {str(e)}")
-        return jsonify({"error": "An internal error occurred. Please try again later."}), 500
-
-@app.errorhandler(404)
-def not_found(e):
-    return jsonify({"error": "Endpoint not found."}), 404
+        return jsonify({"error": f"Something went wrong: {str(e)}"}), 500
 
 if __name__ == "__main__":
-    app.run(debug=False, host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    app.run(debug=False, host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
