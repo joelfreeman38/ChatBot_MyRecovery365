@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sobrio – Your AI Sober Coach</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      margin: 0;
+    }
+
+    header {
+      background: #1a1a1a;
+      color: #fff;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.3rem;
+      font-weight: bold;
+    }
+
+    #chat {
+      flex: 1;
+      padding: 1rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .message {
+      max-width: 80%;
+      margin: 0.3rem 0;
+      padding: 0.8rem;
+      border-radius: 12px;
+      line-height: 1.5;
+    }
+
+    .user {
+      align-self: flex-end;
+      background-color: #d1e7dd;
+      color: #0f5132;
+    }
+
+    .bot {
+      align-self: flex-start;
+      background-color: #fff;
+      color: #333;
+      border: 1px solid #ccc;
+    }
+
+    form {
+      display: flex;
+      padding: 1rem;
+      background-color: #fff;
+      border-top: 1px solid #ccc;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 0.75rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-right: 0.5rem;
+      font-size: 1rem;
+    }
+
+    button {
+      padding: 0.75rem 1rem;
+      background-color: #1a1a1a;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #333;
+    }
+  </style>
+</head>
+<body>
+
+  <header>Sobrio – Your AI Sober Coach</header>
+
+  <div id="chat"></div>
+
+  <form id="chat-form">
+    <input type="text" id="message" placeholder="Type your message..." autocomplete="off" required />
+    <button type="submit">Send</button>
+  </form>
+
+  <script>
+    const form = document.getElementById("chat-form");
+    const messageInput = document.getElementById("message");
+    const chatContainer = document.getElementById("chat");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const userMessage = messageInput.value;
+      appendMessage("user", userMessage);
+      messageInput.value = "";
+
+      try {
+        const res = await fetch("/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ message: userMessage })
+        });
+
+        const data = await res.json();
+        if (data.response) {
+          appendMessage("bot", data.response);
+        } else {
+          appendMessage("bot", "Sorry, something went wrong.");
+        }
+      } catch (err) {
+        appendMessage("bot", "Error connecting to Sobrio backend.");
+      }
+    });
+
+    function appendMessage(sender, text) {
+      const msg = document.createElement("div");
+      msg.className = `message ${sender}`;
+      msg.textContent = text;
+      chatContainer.appendChild(msg);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+  </script>
+
+</body>
+</html>
