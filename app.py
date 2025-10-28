@@ -1,4 +1,5 @@
-# app.py
+# app.py — Sobrio V2.6 Flash + HARM Category Detection
+# Production‑ready Flask app for Render / WordPress integration
 
 from flask import Flask, request, jsonify, render_template_string, session
 from flask_cors import CORS
@@ -6,71 +7,92 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.chains import LLMChain
 from langchain.prompts import ChatPromptTemplate
 from langchain.memory import ConversationBufferWindowMemory
-import os
-import re
+import os, re, uuid, json
 from datetime import datetime
-import json
-import uuid
 
+# --- Flask Setup ---
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY", "your-secret-key-change-this")
+app.secret_key = os.getenv("SECRET_KEY", "replace-with-a-secure-key")
 CORS(app, origins=["https://myrecovery365.com"], supports_credentials=True)
 
-# ✅ Supported real-time model
+# --- Model Setup ---
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "your-api-key-here")
-llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", google_api_key=GEMINI_API_KEY, temperature=0.7)
+llm = ChatGoogleGenerativeAI(
+    model="gemini-2.0-flash-exp",
+    google_api_key=GEMINI_API_KEY,
+    temperature=0.7
+)
 
 # --- Prompts ---
 BASE_PROMPT = ChatPromptTemplate.from_template("""
-You are Sobrio, a compassionate AI recovery coach trained in evidence-based addiction recovery approaches. You are NOT a therapist or doctor.
+You are Sobrio, a compassionate AI recovery companion who offers non‑judgmental,
+evidence‑based guidance rooted in peer recovery, harm‑reduction, and motivational interviewing.
+Do not act as a therapist or medical professional.
 
-Use these principles:
-- Reflective listening, validation, and empathy
-- Motivational interviewing (OARS)
-- Harm reduction and trauma-informed support
-- Peer recovery and holistic wellness (mind, body, spirit)
-- Avoid judgment, shame, or clinical language
-- Emphasize small wins, progress, support systems
+Principles:
+- Reflective listening, empathy, validation.
+- Use open questions (OARS).
+- Encourage self‑awareness and support networks.
+- Avoid judgment or prescriptive advice.
 
-Chat History:
+Conversation so far:
 {chat_history}
 
-User Context:
+User context:
 {user_context}
 
-Current Message: {input}
+User message: {input}
 
-Your response:
+Respond with anwering users questions clearly and accurately.
 """)
 
 RELAPSE_PROMPT = ChatPromptTemplate.from_template("""
-The user may have relapsed or is at high risk. Be warm, non-judgmental, and supportive.
+The user shows signs of relapse risk or cravings.
+Be calm, non‑judgmental, and supportive.
 
-Conversation History: {chat_history}
-Current Message: {input}
+Conversation history:
+{chat_history}
 
-Your response:
-- Validate their honesty
-- Normalize relapse as part of some recovery journeys
-- Ask what they need right now
-- Encourage reaching out to human support (sponsor, group, therapist)
+User message: {input}
+
+Response goals:
+- Validate honesty and courage.
+- Explore what led up to this moment.
+- Encourage next steps (contact sponsor, meeting, coping tools).
+- Avoid shame. Offer connection.
+- If the user is in emotional distress, offer empathy **after** answering the question.
+- Avoid excessive praise or vague encouragement unless the user is in crisis.
+- Keep responses concise, helpful, and grounded in addiction recovery principles.
 """)
 
-# --- Crisis Keywords ---
+# --- Keyword Detection ---
 CRISIS_KEYWORDS = [
     r'\b(kill myself|suicide|end my life|want to die|better off dead)\b',
     r'\b(overdose|od\'ing|taking all|swallow all)\b',
-    r'\b(can\'t go on|no reason to live|no point living)\b',
+    r'\b(can\'t go on|no reason to live)\b',
     r'\b(hurt myself|self harm|cut myself)\b'
 ]
 
 RELAPSE_KEYWORDS = [
     r'\b(relapsed|used again|drank again|slipped up)\b',
-    r'\b(bought|scored|dealer|plug)\b',
+    r'\b(bought|scored|dealer)\b',
     r'\b(craving|urge|trigger|tempt)\b'
 ]
 
-# --- Conversation Store ---
+# --- HARM Category Detection ---
+HARM_CATEGORIES = {
+    "H": ["violence", "abuse", "hurt", "harm", "threat", "danger"],
+    "A": ["addiction", "craving", "drug", "alcohol", "relapse", "use"],
+    "R": ["risky", "unsafe", "alone", "depressed", "hopeless"],
+    "M": ["medication", "doctor", "treatment", "therapy", "diagnosis"]
+}
+
+def detect_harm_categories(text):
+    text_lower = text.lower()
+    detected = [k for k, words in HARM_CATEGORIES.items() if any(w in text_lower for w in words)]
+    return detected
+
+# --- Memory Store ---
 conversations = {}
 
 def get_or_create_session():
@@ -78,205 +100,165 @@ def get_or_create_session():
         session['session_id'] = str(uuid.uuid4())
     return session['session_id']
 
-def get_conversation_memory(session_id):
+def get_memory(session_id):
     if session_id not in conversations:
         conversations[session_id] = {
             'memory': ConversationBufferWindowMemory(k=5, return_messages=True),
-            'user_data': {
-                'message_count': 0,
-                'topics_discussed': [],
-                'first_interaction': datetime.now().isoformat()
-            }
+            'user_data': {'count': 0, 'topics': [], 'created': datetime.now().isoformat()}
         }
     return conversations[session_id]
 
-def detect_crisis(message):
-    for pattern in CRISIS_KEYWORDS:
-        if re.search(pattern, message, re.IGNORECASE):
-            return True
-    return False
+# --- Detection Functions ---
+def detect_crisis(msg):  return any(re.search(p, msg, re.I) for p in CRISIS_KEYWORDS)
+def detect_relapse(msg): return any(re.search(p, msg, re.I) for p in RELAPSE_KEYWORDS)
 
-def detect_relapse(message):
-    for pattern in RELAPSE_KEYWORDS:
-        if re.search(pattern, message, re.IGNORECASE):
-            return True
-    return False
+def crisis_response():
+    return """I hear that you’re in deep distress right now, and your life matters.
 
-def get_crisis_response():
-    return """I hear that you're in a really difficult place right now, and I want you to know that your life matters.
+Please reach out immediately:
+📞 **988 Suicide & Crisis Lifeline** (call or text)
+💬 **Crisis Text Line** — Text HOME to 741741
+🏥 **Emergency:** Call 911 or go to the nearest ER.
 
-**Please reach out immediately:**
-- 📞 **988 Suicide & Crisis Lifeline**: Call or text 988 (24/7)
-- 📱 **Crisis Text Line**: Text HOME to 741741
-- 🏥 **Emergency**: Visit your nearest ER or call 911
+You are not alone. Help is available right now."""
 
-You're not alone. I'm here to support your recovery, but a trained crisis counselor can help you through this moment right now."""
-
-def extract_topics(text):
-    keywords = {
-        'cravings': ['craving', 'urge'],
-        'triggers': ['trigger', 'tempted'],
-        'emotions': ['anxious', 'angry', 'depressed'],
-        'support': ['sponsor', 'group', 'meeting', 'therapy'],
-        'relapse': ['relapsed', 'drank', 'used'],
-        'life stress': ['job', 'relationship', 'family']
-    }
-    found = []
-    for topic, words in keywords.items():
-        if any(w in text.lower() for w in words):
-            found.append(topic)
-    return found
-
-def extract_user_context(user_data):
-    if user_data['message_count'] == 0:
-        return "First conversation."
-    context = f"Message count: {user_data['message_count']}."
-    if user_data['topics_discussed']:
-        context += f" Topics: {', '.join(user_data['topics_discussed'][-3:])}."
-    return context
-
+# --- Routes ---
 @app.route("/chat", methods=["POST"])
 def chat():
-    data = request.get_json()
-    user_input = data.get("message", "").strip()
-    if not user_input:
-        return jsonify({"error": "No message provided"}), 400
+    try:
+        data = request.get_json()
+        msg = data.get("message", "").strip()
+        if not msg:
+            return jsonify({"error": "Message required"}), 400
 
-    session_id = get_or_create_session()
-    conv = get_conversation_memory(session_id)
-    memory = conv['memory']
-    user_data = conv['user_data']
-    user_data['message_count'] += 1
+        sid = get_or_create_session()
+        conv = get_memory(sid)
+        memory, user = conv['memory'], conv['user_data']
+        user['count'] += 1
 
-    if detect_crisis(user_input):
+        if detect_crisis(msg):
+            return jsonify({"response": crisis_response(), "crisis": True})
+
+        relapse_flag = detect_relapse(msg)
+        harm_flags = detect_harm_categories(msg)
+        chat_history = memory.load_memory_variables({}).get("history", "")
+        context = f"Messages so far: {user['count']}. Topics: {', '.join(user['topics'][-3:]) if user['topics'] else 'N/A'}"
+
+        chain = LLMChain(llm=llm, prompt=RELAPSE_PROMPT if relapse_flag else BASE_PROMPT)
+        response = chain.run({"input": msg, "chat_history": chat_history, "user_context": context})
+
+        memory.save_context({"input": msg}, {"output": response})
+        user['topics'].extend(harm_flags)
+
         return jsonify({
-            "response": get_crisis_response(),
-            "crisis_detected": True
+            "response": response,
+            "harm_categories": harm_flags,
+            "relapse": relapse_flag
         })
-
-    relapse_flag = detect_relapse(user_input)
-    chat_history = memory.load_memory_variables({}).get("history", "")
-    user_context = extract_user_context(user_data)
-
-    if relapse_flag:
-        prompt = RELAPSE_PROMPT
-    else:
-        prompt = BASE_PROMPT
-
-    chain = LLMChain(llm=llm, prompt=prompt)
-    response = chain.run({
-        "input": user_input,
-        "chat_history": chat_history,
-        "user_context": user_context
-    })
-
-    memory.save_context({"input": user_input}, {"output": response})
-    user_data['topics_discussed'].extend(extract_topics(user_input))
-
-    return jsonify({
-        "response": response,
-        "relapse_support": relapse_flag
-    })
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({"error": "Internal error. Please try again later."}), 500
 
 @app.route("/chat-ui", methods=["GET"])
 def chat_ui():
-    return render_template_string(EMBEDDED_UI)
+    return render_template_string(UI_HTML)
 
 @app.route("/", methods=["GET"])
-def index():
-    return "<h3>✅ Sobrio AI Recovery Chatbot is running.</h3><p><a href='/chat-ui'>Launch Chat UI</a></p>"
+def home():
+    return "<h3>✅ Sobrio AI Chatbot v2.6 is running.</h3><p><a href='/chat-ui'>Open Chat UI</a></p>"
 
-# --- Embedded UI Template ---
-EMBEDDED_UI = """
+# --- Embedded UI ---
+UI_HTML = """
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Sobrio - Recovery Chat</title>
-  <style>
-    body {
-      background: linear-gradient(to right, #667eea, #764ba2);
-      font-family: Arial, sans-serif;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      padding: 20px; min-height: 100vh; color: white;
-    }
-    #chat-box {
-      background: #fff; color: #333;
-      width: 100%; max-width: 600px;
-      height: 500px; overflow-y: auto;
-      padding: 20px; border-radius: 12px;
-      margin-bottom: 15px;
-    }
-    .message { margin: 12px 0; }
-    .user { text-align: right; }
-    .bot { text-align: left; }
-    input[type="text"] {
-      width: 80%; padding: 12px;
-      border-radius: 8px; border: none;
-    }
-    button {
-      padding: 12px 20px;
-      background: #764ba2; border: none;
-      color: white; border-radius: 8px;
-      cursor: pointer;
-    }
-    .header { text-align: center; margin-bottom: 20px; }
-    .header h1 { margin: 0; font-size: 2rem; }
-  </style>
+<meta charset="UTF-8" />
+<title>Sobrio - Recovery Chat</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+body {
+  font-family: 'Inter', sans-serif;
+  background: #f1f5f9;
+  margin: 0; padding: 20px;
+  display: flex; justify-content: center; align-items: center;
+  min-height: 100vh;
+}
+#chat-wrapper {
+  background: #fff; border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+  width: 100%; max-width: 700px;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+header {
+  background: linear-gradient(135deg,#667eea,#764ba2);
+  color: white; padding: 20px; text-align: center;
+}
+header h1 { margin: 0; font-weight: 600; }
+#chat-box {
+  flex: 1; padding: 20px; overflow-y: auto;
+  display: flex; flex-direction: column;
+}
+.message {
+  max-width: 70%; margin: 10px 0; padding: 12px 18px;
+  border-radius: 20px; line-height: 1.4;
+  animation: fadeIn .3s ease;
+}
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
+.user { align-self: flex-end; background: linear-gradient(135deg,#667eea,#764ba2); color: #fff; border-bottom-right-radius: 4px; }
+.bot  { align-self: flex-start; background: #e5e5ea; color: #000; border-bottom-left-radius: 4px; }
+footer {
+  display: flex; padding: 15px; border-top: 1px solid #eee;
+}
+input {
+  flex: 1; padding: 12px; border: 2px solid #ddd;
+  border-radius: 24px; font-size: 1rem; outline: none;
+}
+input:focus { border-color: #667eea; }
+button {
+  background: linear-gradient(135deg,#667eea,#764ba2);
+  color: white; border: none; border-radius: 24px;
+  padding: 12px 24px; margin-left: 10px;
+  cursor: pointer; font-weight: 600;
+}
+button:hover { opacity: 0.9; }
+</style>
 </head>
 <body>
-  <div class="header">
-    <h1>🌱 Sobrio</h1>
-    <p>Your confidential recovery companion</p>
-  </div>
+<div id="chat-wrapper">
+  <header><h1>🌱 Sobrio</h1><p>Your confidential recovery companion</p></header>
   <div id="chat-box"></div>
-  <div>
-    <input type="text" id="user-input" placeholder="Type your message...">
+  <footer>
+    <input id="user-input" placeholder="Type your message..." />
     <button onclick="sendMessage()">Send</button>
-  </div>
-  <script>
-    const chatBox = document.getElementById('chat-box');
-    const input = document.getElementById('user-input');
-
-    function appendMessage(text, sender) {
-      const div = document.createElement('div');
-      div.className = 'message ' + sender;
-      div.textContent = text;
-      chatBox.appendChild(div);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-    function sendMessage() {
-      const msg = input.value.trim();
-      if (!msg) return;
-      appendMessage(msg, 'user');
-      input.value = '';
-
-      fetch('/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ message: msg })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.response) appendMessage(data.response, 'bot');
-        else appendMessage("I'm having trouble responding.", 'bot');
-      })
-      .catch(() => appendMessage("Connection error.", 'bot'));
-    }
-
-    input.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") sendMessage();
-    });
-
-    window.onload = () => {
-      setTimeout(() => {
-        appendMessage("Hi, I'm Sobrio. How can I support you today?", 'bot');
-      }, 500);
-    };
-  </script>
+  </footer>
+</div>
+<script>
+const chatBox=document.getElementById('chat-box');
+const input=document.getElementById('user-input');
+function append(text,sender){
+  const d=document.createElement('div');
+  d.className='message '+sender; d.textContent=text;
+  chatBox.appendChild(d); chatBox.scrollTop=chatBox.scrollHeight;
+}
+function sendMessage(){
+  const msg=input.value.trim(); if(!msg)return;
+  append(msg,'user'); input.value='';
+  fetch('/chat',{method:'POST',headers:{'Content-Type':'application/json'},
+  credentials:'include',body:JSON.stringify({message:msg})})
+  .then(r=>r.json()).then(data=>{
+    if(data.response){append(data.response,'bot');
+      if(data.harm_categories?.length)
+        append("⚠️ HARM flags detected: "+data.harm_categories.join(', '),'bot');
+    } else append("I'm having trouble responding.","bot");
+  }).catch(()=>append("Network error.","bot"));
+}
+input.addEventListener('keypress',e=>{if(e.key==='Enter')sendMessage();});
+window.onload=()=>setTimeout(()=>append("Hi, I'm Sobrio. How can I support you today?","bot"),500);
+</script>
 </body>
 </html>
 """
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
