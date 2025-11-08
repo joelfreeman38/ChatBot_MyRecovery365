@@ -184,24 +184,61 @@ button:hover { opacity:0.9; }
     <button onclick="sendMessage()">Send</button>
   </footer>
 </div>
+<!-- Load Marked.js for Markdown support -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
 const chatBox = document.getElementById('chat-box');
 const input = document.getElementById('user-input');
-function append(text, sender){ const d=document.createElement('div'); d.className='message '+sender; d.textContent=text; chatBox.appendChild(d); chatBox.scrollTop=chatBox.scrollHeight; }
-function sendMessage(){
-  const msg = input.value.trim(); if (!msg) return;
-  append(msg, 'user'); input.value='';
-  fetch('/chat', { method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: JSON.stringify({message: msg}) })
-    .then(r => r.json())
-    .then(data => {
-      if (data.response) { append(data.response, 'bot'); if (data.harm_categories?.length) append('⚠️ HARM: '+data.harm_categories.join(', '), 'bot'); }
-      else append("I'm having trouble responding.", 'bot');
-    })
-    .catch(() => append("Network error.", 'bot'));
+
+// Function to render markdown safely
+function appendMarkdown(text, sender) {
+  const div = document.createElement('div');
+  div.className = 'message ' + sender;
+  div.innerHTML = marked.parse(text); // Parses Markdown into clean HTML
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
 }
-input.addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
-window.onload = () => setTimeout(() => append("Hi, I'm Sobrio. How can I support you today?", 'bot'), 300);
-</script></body></html>
+
+// Send user message
+function sendMessage() {
+  const msg = input.value.trim();
+  if (!msg) return;
+  appendMarkdown(msg, 'user');
+  input.value = '';
+
+  fetch('/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ message: msg })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.response) {
+      appendMarkdown(data.response, 'bot');
+      if (data.harm_categories?.length) {
+        appendMarkdown("⚠️ **HARM Alert**: " + data.harm_categories.join(', '), 'bot');
+      }
+    } else {
+      appendMarkdown("*I'm having trouble responding.*", 'bot');
+    }
+  })
+  .catch(() => appendMarkdown("*Network error.*", 'bot'));
+}
+
+// Trigger message on Enter
+input.addEventListener('keypress', e => {
+  if (e.key === 'Enter') sendMessage();
+});
+
+// Welcome message
+window.onload = () => {
+  setTimeout(() => appendMarkdown("👋 **Hi, I'm Sobrio.** How can I support you today?", 'bot'), 300);
+};
+</script>
+</body>
+</html>
+
 """
 
 if __name__ == '__main__':
