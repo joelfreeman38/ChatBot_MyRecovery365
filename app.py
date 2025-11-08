@@ -158,83 +158,181 @@ def root():
 # --- Embedded UI with Clean UX ---
 UI_HTML = r"""
 <!DOCTYPE html>
-<html><head><meta charset='UTF-8'><title>Sobrio</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
-body { font-family:'Inter',sans-serif; background:#f1f5f9; margin:0; padding:20px; display:flex; justify-content:center; align-items:center; min-height:100vh; }
-#chat-wrapper { background:white; border-radius:16px; box-shadow:0 10px 40px rgba(0,0,0,0.1); width:100%; max-width:700px; display:flex; flex-direction:column; overflow:hidden; }
-header { background:linear-gradient(135deg,#667eea,#764ba2); color:white; padding:20px; text-align:center; }
-#chat-box { flex:1; padding:20px; overflow-y:auto; display:flex; flex-direction:column; }
-.message { max-width:75%; padding:12px 18px; margin:10px 0; border-radius:20px; line-height:1.5; white-space:pre-wrap; animation:fadeIn .3s ease; }
-.user { align-self:flex-end; background:linear-gradient(135deg,#667eea,#764ba2); color:white; border-bottom-right-radius:4px; }
-.bot { align-self:flex-start; background:#e5e5ea; color:black; border-bottom-left-radius:4px; }
-footer { display:flex; padding:15px; border-top:1px solid #eee; }
-input { flex:1; padding:12px; border:2px solid #ddd; border-radius:24px; font-size:1rem; outline:none; }
-input:focus { border-color:#667eea; }
-button { background:linear-gradient(135deg,#667eea,#764ba2); color:white; border:none; border-radius:24px; padding:12px 24px; margin-left:10px; cursor:pointer; font-weight:600; }
-button:hover { opacity:0.9; }
-@keyframes fadeIn { from {opacity:0;transform:translateY(8px);} to {opacity:1;transform:translateY(0);} }
-</style></head>
-<body>
-<div id="chat-wrapper">
-  <header><h1>🌱 Sobrio</h1><p>Your confidential recovery companion</p></header>
-  <div id="chat-box"></div>
-  <footer>
-    <input id="user-input" placeholder="Type your message..." />
-    <button onclick="sendMessage()">Send</button>
-  </footer>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script>
-const chatBox = document.getElementById('chat-box');
-const input = document.getElementById('user-input');
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sobrio - Chat UI</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
 
-// Function to render markdown safely
-function appendMarkdown(text, sender) {
-  const div = document.createElement('div');
-  div.className = 'message ' + sender;
-  div.innerHTML = marked.parse(text);
-  chatBox.appendChild(div);
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-// Send user message
-function sendMessage() {
-  const msg = input.value.trim();
-  if (!msg) return;
-  appendMarkdown(msg, 'user');
-  input.value = '';
-
-  fetch('/chat', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify({ message: msg })
-  })
-  .then(r => r.json())
-  .then(data => {
-    if (data.response) {
-      appendMarkdown(data.response, 'bot');
-      if (data.harm_categories?.length) {
-        appendMarkdown("⚠️ **HARM Alert**: " + data.harm_categories.join(', '), 'bot');
-      }
-    } else {
-      appendMarkdown("*I'm having trouble responding.*", 'bot');
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f1f5f9;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
     }
-  })
-  .catch(() => appendMarkdown("*Network error.*", 'bot'));
-}
 
-// Trigger message on Enter
-input.addEventListener('keypress', e => {
-  if (e.key === 'Enter') sendMessage();
-});
+    #chat-wrapper {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
 
-// Welcome message
-window.onload = () => {
-  setTimeout(() => appendMarkdown("👋 **Hi, I'm Sobrio.** How can I support you today?", 'bot'), 300);
-};
-</script>
+    header {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      padding: 16px;
+      text-align: center;
+    }
+
+    #chat-box {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .message {
+      padding: 10px 14px;
+      font-size: 0.95rem;
+      max-width: 85%;
+      border-radius: 16px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .user {
+      align-self: flex-end;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .bot {
+      align-self: flex-start;
+      background: #e5e5ea;
+      color: #111;
+      border-bottom-left-radius: 4px;
+    }
+
+    footer {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #eee;
+      background: #f9fafb;
+    }
+
+    input {
+      flex: 1;
+      padding: 10px 14px;
+      font-size: 0.95rem;
+      border: 2px solid #ddd;
+      border-radius: 20px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus {
+      border-color: #667eea;
+    }
+
+    button {
+      padding: 10px 18px;
+      margin-left: 10px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      font-weight: 600;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div id="chat-wrapper">
+    <header>
+      <h2>👤 Sobrio</h2>
+      <p>Your confidential recovery companion</p>
+    </header>
+
+    <div id="chat-box"></div>
+
+    <footer>
+      <input id="user-input" placeholder="Type your message..." />
+      <button onclick="sendMessage()">Send</button>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    const chatBox = document.getElementById('chat-box');
+    const input = document.getElementById('user-input');
+
+    function appendMarkdown(text, sender) {
+      const div = document.createElement('div');
+      div.className = 'message ' + sender;
+      div.innerHTML = marked.parse(text);
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function sendMessage() {
+      const msg = input.value.trim();
+      if (!msg) return;
+      appendMarkdown(msg, 'user');
+      input.value = '';
+
+      fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ message: msg })
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.response) {
+            appendMarkdown(data.response, 'bot');
+            if (data.harm_categories?.length) {
+              appendMarkdown("\u26A0\uFE0F **HARM Alert**: " + data.harm_categories.join(', '), 'bot');
+            }
+          } else {
+            appendMarkdown("*I'm having trouble responding.*", 'bot');
+          }
+        })
+        .catch(() => appendMarkdown("*Network error.*", 'bot'));
+    }
+
+    input.addEventListener('keypress', e => {
+      if (e.key === 'Enter') sendMessage();
+    });
+
+    window.onload = () => {
+      setTimeout(() => appendMarkdown("\u{1F44B} **Hi, I'm Sobrio.** How can I support you today?", 'bot'), 300);
+    };
+  </script>
 </body>
 </html>
 """
